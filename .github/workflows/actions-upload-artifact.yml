@@ -1,0 +1,45 @@
+name: Reusable Node.js Upload-Artifact
+
+on:
+  workflow_call:
+    inputs:
+      artifact-name:
+        description: 'Name of the artifact to upload'
+        required: false
+        type: string
+        default: 'node-app-artifacts'
+      artifact-path:
+        description: 'Path to the files to upload as artifacts'
+        required: false
+        type: string
+        default: '.'
+    outputs:
+      artifact-status:
+        description: 'Status of the artifact upload job'
+        value: ${{ jobs.upload-artifact.outputs.artifact-status }}
+
+jobs:
+  upload-artifact:
+    runs-on: ubuntu-latest
+    outputs:
+      artifact-status: ${{ steps.set-output.outputs.artifact-status }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Upload artifacts
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: ${{ inputs.artifact-path }}
+          retention-days: 7
+
+      - name: Set artifact status
+        id: set-output
+        run: |
+          if [ ${{ steps.upload.outcome }} == "success" ]; then
+            echo "artifact-status=success" >> $GITHUB_OUTPUT
+          else
+            echo "artifact-status=failure" >> $GITHUB_OUTPUT
+          fi

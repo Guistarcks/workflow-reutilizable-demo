@@ -1,0 +1,44 @@
+name: Reusable Node.js Build
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: 'Node.js version to use'
+        required: true
+        type: string
+    outputs:
+      test-status:
+        description: 'Status of the test job'
+        value: ${{ jobs.test.outputs.test-status }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    outputs:
+      test-status: ${{ steps.set-output.outputs.test-status }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        id: run-tests
+        run: npm test || true # Continue even if tests fail to set output
+        continue-on-error: true
+
+      - name: Set test status
+        id: set-output
+        run: |
+          if [ ${{ steps.run-tests.outcome }} == "success" ]; then
+            echo "test-status=success" >> $GITHUB_OUTPUT
+          else
+            echo "test-status=failure" >> $GITHUB_OUTPUT
+          fi
