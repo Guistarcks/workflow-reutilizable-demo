@@ -104,8 +104,7 @@ jobs:
             -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
             -Dsonar.exclusions=**/*.java \
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
-            -Dsonar.coverage.exclusions=**/*.test.js,**/*.spec.js,**/node_modules/** \
-            -Dsonar.testExecutionReportPaths=coverage/test-report.xml
+            -Dsonar.coverage.exclusions=**/*.test.js,**/*.spec.js,**/node_modules/**
        
   build:
       if: github.base_ref == 'develop'
