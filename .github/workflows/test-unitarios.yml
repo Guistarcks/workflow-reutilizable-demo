@@ -6,7 +6,13 @@ on:
         description: 'Node.js version to use'
         required: true
         type: string
+
+    secrets:
       
+      SONAR_TOKEN:
+        description: 'Sonar token'
+        required: true
+        
 jobs:
   test-unitarios:
     runs-on: ubuntu-latest
@@ -86,15 +92,16 @@ jobs:
           java-version: '17'
         
       - name: Ejecutar análisis de calidad con SonarQube 🧪
-      
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           npx sonar-scanner \
             -Dsonar.projectKey=${{ vars.PROJECT_KEY }} \
             -Dsonar.projectName=${{ vars.PROJECT_NAME }} \
-              -Dsonar.sources=. \
-              -Dsonar.host.url=${{ vars.SONAR_HOST_URL }} \
-              -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
-              -Dsonar.exclusions=**/*.java
+            -Dsonar.sources=. \
+            -Dsonar.host.url=${{ vars.SONAR_HOST_URL }} \
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.exclusions=**/*.java
        
 
   build:
