@@ -102,7 +102,10 @@ jobs:
             -Dsonar.sources=. \
             -Dsonar.host.url=${{ vars.SONAR_HOST_URL }} \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
-            -Dsonar.exclusions=**/*.java
+            -Dsonar.exclusions=**/*.java \
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
+            -Dsonar.coverage.exclusions=**/*.test.js,**/*.spec.js,**/node_modules/** \
+            -Dsonar.testExecutionReportPaths=coverage/test-report.xml
        
   build:
       if: github.base_ref == 'develop'
