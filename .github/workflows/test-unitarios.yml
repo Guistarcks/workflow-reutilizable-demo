@@ -140,7 +140,7 @@ jobs:
   deploy-pre:
     if: github.base_ref == 'develop'
     needs: build
-    uses: ./.github/workflows/action/action-deploy-pre.yml
+    uses: ./.github/workflows/action-deploy-pre.yml
     with:
       environment: 'pre-production'
       artifact-name: 'node-app-artifacts'
