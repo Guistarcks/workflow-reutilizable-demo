@@ -15,8 +15,9 @@ on:
         
 jobs:
   test-unitarios:
+    if: github.base_ref == 'develop' || startsWith(github.ref, 'refs/heads/feature/')
     runs-on: ubuntu-latest
-      
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -103,12 +104,11 @@ jobs:
             -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
             -Dsonar.exclusions=**/*.java
        
-
   build:
+      if: github.base_ref == 'develop'
       runs-on: ubuntu-latest
       needs: Test-Sonar
-    
-    
+     
       steps:
         - name: Checkout repository
           uses: actions/checkout@v4
