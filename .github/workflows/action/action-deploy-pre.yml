@@ -1,0 +1,51 @@
+name: Deploy pre
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: string
+        default: 'pre-production'
+      artifact-name:
+        description: 'Name of the artifact to deploy'
+        required: true
+        type: string
+        default: 'node-app-artifacts'
+      deploy-path:
+        description: 'Path where to extract artifacts'
+        required: false
+        type: string
+        default: './dist'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: ${{ inputs.deploy-path }}
+
+      - name: Show deployment info
+        run: |
+          echo "## 🚀 Deploy to ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Artifact:** ${{ inputs.artifact-name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Deploy Path:** ${{ inputs.deploy-path }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Deploy to ${{ inputs.environment }}
+        run: |
+          echo "Deploying to ${{ inputs.environment }} environment..."
+          echo "Artifact: ${{ inputs.artifact-name }}"
+          echo "Path: ${{ inputs.deploy-path }}"
+          
+          # Aquí puedes agregar tu comando de deploy específico
+          # Por ejemplo: aws s3 sync ${{ inputs.deploy-path }} s3://your-${{ inputs.environment }}-bucket
+          # O: docker push your-registry/${{ inputs.environment }}-app:${{ github.sha }}
+          
+          echo "✅ Deployment to ${{ inputs.environment }} completed" 
