@@ -10,6 +10,7 @@ on:
 jobs:
   test-unitarios:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
    
     steps:
       - name: Checkout repository
@@ -28,6 +29,7 @@ jobs:
         id: run-tests
         run: npm test -- --coverage --watchAll=false
         continue-on-error: true
+        timeout-minutes: 5
 
       - name: Upload coverage reports
         uses: actions/upload-artifact@v4
@@ -58,7 +60,8 @@ jobs:
   Test-Sonar:
     needs: test-unitarios
     runs-on: ubuntu-latest
-    if: always()   
+    if: always()
+    timeout-minutes: 15   
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -69,13 +72,13 @@ jobs:
           name: 'coverage-reports'
           path: 'coverage/'
 
-      - name: Set up Node.js
+      - name: Configurar Node.js 🔧
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: Instalar dependencias Node.js
         run: npm ci
 
       - name: Configurar Java 17 para SonarQube ☕
@@ -85,34 +88,23 @@ jobs:
           java-version: '17'
         
       - name: Ejecutar análisis de calidad con SonarQube 🧪
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          if [ -f "coverage/lcov.info" ]; then
-            echo "Using coverage report for SonarQube analysis"
-            npx sonar-scanner \
-              -Dsonar.projectKey=${{ vars.PROJECT_KEY }} \
-              -Dsonar.projectName=${{ vars.PROJECT_NAME }} \
+          npx sonar-scanner \
+            -Dsonar.projectKey=${{ vars.PROJECT_KEY }} \
+            -Dsonar.projectName=${{ vars.PROJECT_NAME }} \
               -Dsonar.sources=. \
-              -Dsonar.exclusions=node_modules/**,dist/**,.github/**,**/__tests__/** \
               -Dsonar.host.url=${{ vars.SONAR_HOST_URL }} \
               -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
-              -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
-              -Dsonar.coverage.exclusions=**/__tests__/**,**/*.test.js
-          else
-            echo "No coverage report found, running SonarQube without coverage"
-            npx sonar-scanner \
-              -Dsonar.projectKey=${{ vars.PROJECT_KEY }} \
-              -Dsonar.projectName=${{ vars.PROJECT_NAME }} \
-              -Dsonar.sources=. \
-              -Dsonar.exclusions=node_modules/**,dist/**,.github/**,**/__tests__/** \
-              -Dsonar.host.url=${{ vars.SONAR_HOST_URL }} \
-              -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
-              -Dsonar.coverage.exclusions=**/__tests__/**,**/*.test.js
-          fi
+              -Dsonar.exclusions=**/*.java
+       
 
   build:
       runs-on: ubuntu-latest
       needs: Test-Sonar
       if: always()
+    
       steps:
         - name: Checkout repository
           uses: actions/checkout@v4
@@ -138,4 +130,5 @@ jobs:
             name: 'node-app-artifacts'
             path: '.'
             retention-days: 7
+      
   
