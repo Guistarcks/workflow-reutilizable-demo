@@ -35,11 +35,11 @@ jobs:
         id: run-tests
         run: npm test -- --coverage --watchAll=false
         continue-on-error: true
-        timeout-minutes: 5
+        
 
       - name: Upload coverage reports
         uses: actions/upload-artifact@v4
-        if: always()
+       
         with:
           name: 'coverage-reports'
           path: 'coverage/'
@@ -47,14 +47,14 @@ jobs:
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
-        if: always()
+      
         with:
           name: 'test-results'
           path: 'coverage/lcov.info'
           retention-days: 30
 
       - name: Create test summary
-        if: always()
+     
         run: |
           echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
           if [ -f "coverage/lcov.info" ]; then
@@ -65,77 +65,32 @@ jobs:
 
   Test-Sonar:
     needs: test-unitarios
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download coverage reports
-        uses: actions/download-artifact@v4
-        with:
-          name: 'coverage-reports'
-          path: 'coverage/'
-
-      - name: Configurar Node.js 🔧
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ inputs.node-version }}
-          cache: 'npm'
-
-      - name: Instalar dependencias Node.js
-        run: npm ci
-
-      - name: Configurar Java 17 para SonarQube ☕
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-        
-      - name: Ejecutar análisis de calidad con SonarQube 🧪
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          npx sonar-scanner \
-            -Dsonar.projectKey=${{ vars.PROJECT_KEY }} \
-            -Dsonar.projectName=${{ vars.PROJECT_NAME }} \
-            -Dsonar.sources=. \
-            -Dsonar.host.url=${{ vars.SONAR_HOST_URL }} \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
-            -Dsonar.exclusions=**/*.java \
-            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
-            -Dsonar.coverage.exclusions=**/*.test.js,**/*.spec.js,**/node_modules/**
+    uses: ./.github/workflows/action-sonar.yml
+    with:
+      node-version: ${{ inputs.node-version }}
+      java-version: '17'
+      coverage-artifact-name: 'coverage-reports'
+      coverage-path: 'coverage/'
+      project-key: ${{ vars.PROJECT_KEY }}
+      project-name: ${{ vars.PROJECT_NAME }}
+      sonar-host-url: ${{ vars.SONAR_HOST_URL }}
+      sources-path: '.'
+      exclusions: '**/*.java'
+      coverage-exclusions: '**/*.test.js,**/*.spec.js,**/node_modules/**'
+      lcov-report-path: 'coverage/lcov.info'
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
        
   build:
-      if: github.base_ref == 'develop'
-      runs-on: ubuntu-latest
-      needs: Test-Sonar
-     
-      steps:
-        - name: Checkout repository
-          uses: actions/checkout@v4
-  
-        - name: Set up Node.js
-          uses: actions/setup-node@v4
-          with:
-            node-version: ${{ inputs.node-version }}
-            cache: 'npm'
-  
-        - name: Install dependencies
-          run: npm ci
-  
-        - name: Build project
-          id: run-build
-          run: npm run build || echo "No build script found, skipping build step"
-          continue-on-error: true
-      
-        - name: Upload artifacts
-          id: upload
-          uses: actions/upload-artifact@v4
-          with:
-            name: 'node-app-artifacts'
-            path: '.'
-            retention-days: 7
+    if: github.base_ref == 'develop'
+    needs: Test-Sonar
+    uses: ./.github/workflows/action-build.yml
+    with:
+      node-version: ${{ inputs.node-version }}
+      build-command: 'npm run build'
+      artifact-name: 'node-app-artifacts'
+      artifact-path: '.'
+      retention-days: 7
 
   deploy-pre:
     if: github.base_ref == 'develop'
@@ -145,3 +100,13 @@ jobs:
       environment: 'pre-production'
       artifact-name: 'node-app-artifacts'
       deploy-path: './dist'
+
+  deploy-pro:
+    if: github.base_ref == 'develop'
+    needs: build
+    uses: ./.github/workflows/action-deploy-pro.yml
+    with:
+      environment: 'pre-production'
+      artifact-name: 'node-app-artifacts'
+      deploy-path: './dist'
+  

@@ -1,0 +1,117 @@
+name: SonarQube Analysis Action
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: 'Node.js version to use'
+        required: true
+        type: string
+      java-version:
+        description: 'Java version for SonarQube'
+        required: false
+        type: string
+        default: '17'
+      coverage-artifact-name:
+        description: 'Name of the coverage artifact to download'
+        required: false
+        type: string
+        default: 'coverage-reports'
+      coverage-path:
+        description: 'Path where coverage reports are located'
+        required: false
+        type: string
+        default: 'coverage/'
+      project-key:
+        description: 'SonarQube project key'
+        required: true
+        type: string
+      project-name:
+        description: 'SonarQube project name'
+        required: true
+        type: string
+      sonar-host-url:
+        description: 'SonarQube host URL'
+        required: true
+        type: string
+      sources-path:
+        description: 'Path to source code for analysis'
+        required: false
+        type: string
+        default: '.'
+      exclusions:
+        description: 'Files to exclude from analysis'
+        required: false
+        type: string
+        default: '**/*.java'
+      coverage-exclusions:
+        description: 'Files to exclude from coverage'
+        required: false
+        type: string
+        default: '**/*.test.js,**/*.spec.js,**/node_modules/**'
+      lcov-report-path:
+        description: 'Path to lcov.info file'
+        required: false
+        type: string
+        default: 'coverage/lcov.info'
+
+    secrets:
+      SONAR_TOKEN:
+        description: 'SonarQube authentication token'
+        required: true
+
+jobs:
+  sonar-analysis:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.coverage-artifact-name }}
+          path: ${{ inputs.coverage-path }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set up Java for SonarQube
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ inputs.java-version }}
+        
+      - name: Run SonarQube analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          npx sonar-scanner \
+            -Dsonar.projectKey=${{ inputs.project-key }} \
+            -Dsonar.projectName=${{ inputs.project-name }} \
+            -Dsonar.sources=${{ inputs.sources-path }} \
+            -Dsonar.host.url=${{ inputs.sonar-host-url }} \
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.exclusions=${{ inputs.exclusions }} \
+            -Dsonar.javascript.lcov.reportPaths=${{ inputs.lcov-report-path }} \
+            -Dsonar.coverage.exclusions=${{ inputs.coverage-exclusions }}
+
+      - name: SonarQube analysis summary
+        if: always()
+        run: |
+          echo "## SonarQube Analysis Summary" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ SonarQube analysis completed successfully" >> $GITHUB_STEP_SUMMARY
+            echo "- Project: ${{ inputs.project-name }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Host: ${{ inputs.sonar-host-url }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Coverage report: ${{ inputs.lcov-report-path }}" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ SonarQube analysis failed" >> $GITHUB_STEP_SUMMARY
+            echo "- Check the logs for details" >> $GITHUB_STEP_SUMMARY
+          fi 
