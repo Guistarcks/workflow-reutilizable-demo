@@ -102,7 +102,7 @@ jobs:
       deploy-path: './dist'
 
   deploy-pro:
-    if: github.base_ref == 'develop'
+    if: github.base_ref == 'main'
     needs: build
     uses: ./.github/workflows/action-deploy-pro.yml
     with:
