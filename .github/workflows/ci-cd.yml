@@ -33,9 +33,9 @@ jobs:
     if: |
       always() && (
         startsWith(github.ref, 'refs/heads/feature/') ||
-        startsWith(github.ref, 'refs/heads/develop/') ||
+        startsWith(github.ref, 'refs/heads/develop') ||
         (
-          inputs.pr-merged == false &&
+          inputs.pr-merged == true &&
             inputs.base-branches == 'develop' &&
             github.event_name == 'workflow_dispatch'
           )
