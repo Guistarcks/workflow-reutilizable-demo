@@ -16,11 +16,25 @@ on:
         required: true
         type: string
         default: ''
+      base-branches:
+        description: 'Base branch name for PRs'
+        required: true
+        type: string
+        default: ''
+      pr-merged:
+        description: 'Indicates if the PR was merged'
+        required: true
+        type: boolean
+        default: false
 
 jobs:
 
   test-unitarios:
-    if: github.base_ref == 'develop' || startsWith(github.ref, 'refs/heads/feature/')
+    
+    if : |
+       always() && 
+       startsWith(github.ref, 'refs/heads/feature/') && 
+       (inputs.pr-merged == false && inputs.base-branches == 'develop') 
     runs-on: ubuntu-latest
     
     steps:
