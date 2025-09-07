@@ -31,10 +31,16 @@ jobs:
 
   test-unitarios:
     if : |
-       always() && 
-       startsWith(github.ref, 'refs/heads/feature/') && startsWith(github.ref, 'refs/heads/develop/')||
-       (inputs.pr-merged == false && inputs.base-branches == 'develop') &&
-       (github.event_name == 'workflow_dispatch')
+       if: |
+        always() && (
+          startsWith(github.ref, 'refs/heads/feature/') ||
+          startsWith(github.ref, 'refs/heads/develop/') ||
+          (
+            inputs.pr-merged == false &&
+            inputs.base-branches == 'develop' &&
+            github.event_name == 'workflow_dispatch'
+          )
+        )
     runs-on: ubuntu-latest
     
     steps:
