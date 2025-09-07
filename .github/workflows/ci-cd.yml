@@ -6,14 +6,19 @@ on:
         description: 'Node.js version to use'
         required: true
         type: string
-
-    secrets:
-      
-      SONAR_TOKEN:
-        description: 'Sonar token'
+      sonar-scanner:
+        description: 'SonarQube scan mode'
         required: true
-        
+        type: string
+        default: ''
+      deploy-entorno:
+        description: 'Default entorno for deployment'
+        required: true
+        type: string
+        default: ''
+
 jobs:
+
   test-unitarios:
     if: github.base_ref == 'develop' || startsWith(github.ref, 'refs/heads/feature/')
     runs-on: ubuntu-latest
@@ -63,50 +68,21 @@ jobs:
             echo "⚠️ Tests completed without coverage report" >> $GITHUB_STEP_SUMMARY
           fi
 
-  Test-Sonar:
-    needs: test-unitarios
-    uses: ./.github/workflows/action-sonar.yml
-    with:
-      node-version: ${{ inputs.node-version }}
-      java-version: '17'
-      coverage-artifact-name: 'coverage-reports'
-      coverage-path: 'coverage/'
-      project-key: ${{ vars.PROJECT_KEY }}
-      project-name: ${{ vars.PROJECT_NAME }}
-      sonar-host-url: ${{ vars.SONAR_HOST_URL }}
-      sources-path: '.'
-      exclusions: '**/*.java'
-      coverage-exclusions: '**/*.test.js,**/*.spec.js,**/node_modules/**'
-      lcov-report-path: 'coverage/lcov.info'
-    secrets:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-       
-  build:
-    if: github.base_ref == 'develop'
-    needs: Test-Sonar
-    uses: ./.github/workflows/action-build.yml
-    with:
-      node-version: ${{ inputs.node-version }}
-      build-command: 'npm run build'
-      artifact-name: 'node-app-artifacts'
-      artifact-path: '.'
-      retention-days: 7
+  # deploy-pre:
+  #   if: github.base_ref == 'develop'
+  #   needs: build
+  #   uses: ./.github/workflows/action-deploy-pre.yml
+  #   with:
+  #     environment: 'pre-production'
+  #     artifact-name: 'node-app-artifacts'
+  #     deploy-path: './dist'
 
-  deploy-pre:
-    if: github.base_ref == 'develop'
-    needs: build
-    uses: ./.github/workflows/action-deploy-pre.yml
-    with:
-      environment: 'pre-production'
-      artifact-name: 'node-app-artifacts'
-      deploy-path: './dist'
-
-  deploy-pro:
-    if: github.base_ref == 'main'
-    needs: build
-    uses: ./.github/workflows/action-deploy-pro.yml
-    with:
-      environment: 'pre-production'
-      artifact-name: 'node-app-artifacts'
-      deploy-path: './dist'
+  # deploy-pro:
+  #   if: github.base_ref == 'main'
+  #   needs: build
+  #   uses: ./.github/workflows/action-deploy-pro.yml
+  #   with:
+  #     environment: 'pre-production'
+  #     artifact-name: 'node-app-artifacts'
+  #     deploy-path: './dist'
   
