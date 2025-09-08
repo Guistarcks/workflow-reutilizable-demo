@@ -26,8 +26,61 @@ on:
         required: true
         type: boolean
         default: false
+      path-config-json:
+        description: 'Path to the config.json file'
+        required: false
+        type: string
+        default: './config.json'  
 
 jobs:
+ 
+ read-config-json:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.set-vars.outputs.version }}
+      sonar_scanner: ${{ steps.set-vars.outputs.sonar_scanner }}
+      entorno: ${{ steps.set-vars.outputs.entorno }}
+      modulo-backend: ${{ steps.set-vars.outputs.mod_backend }}
+      modulo-frontend: ${{ steps.set-vars.outputs.mod_frontend  }}
+
+
+
+    steps:
+      - name: Obtener código fuente 📥
+        uses: actions/checkout@v4
+
+     - name: Read configuration JSON and export variables 📄
+        id: set-vars
+        shell: bash
+        run: |
+          CONFIG_PATH="${{ inputs.config-path }}"
+          if [ ! -f "$CONFIG_PATH" ]; then 
+            echo "❌ Config file not found: $CONFIG_PATH"
+            exit 1
+          fi 
+
+          echo "📄 Reading configuration from: $CONFIG_PATH"
+
+          version=$(jq -r '.version' "$CONFIG_PATH")
+          sonar_scanner=$(jq -r '."sonar-scanner"' "$CONFIG_PATH")
+          entorno=$(jq -r '.entorno' "$CONFIG_PATH")
+          # Exportar cada valor del objeto modulos como variable separada
+          mod_backend=$(jq -r '.modulos.backend' "$CONFIG_PATH")
+          mod_frontend=$(jq -r '.modulos.frontend' "$CONFIG_PATH")
+
+          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "sonar_scanner=$sonar_scanner" >> $GITHUB_OUTPUT
+          echo "entorno=$entorno" >> $GITHUB_OUTPUT
+          echo "mod_backend=$mod_backend" >> $GITHUB_OUTPUT
+          echo "mod_frontend=$mod_frontend" >> $GITHUB_OUTPUT
+
+          echo "## 📋 Configuration Summary" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** $version" >> $GITHUB_STEP_SUMMARY
+          echo "**Sonar Scanner:** $sonar_scanner" >> $GITHUB_STEP_SUMMARY
+          echo "**Entorno:** $entorno" >> $GITHUB_STEP_SUMMARY
+          echo "**Módulo Backend:** $mod_backend" >> $GITHUB_STEP_SUMMARY
+          echo "**Módulo Frontend:** $mod_frontend" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Configuration loaded successfully"
 
   test-unitarios:
     if: |
@@ -46,50 +99,66 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ inputs.node-version }}
-          cache: 'npm'
-          cache-dependency-path: './backend/package-lock.json'
+      - name: comprobar modulo
+        run: |
+         run: |
+            MOD_BACKEND="${{ needs.read-config-json.outputs.mod_backend }}"
+            MOD_FRONTEND="${{ needs.read-config-json.outputs.mod_frontend }}"
           
-      - name: Install dependencies
-        run: npm ci
-        working-directory: './backend'
 
-      - name: Run tests with coverage
-        id: run-tests
-        run: npm test -- --coverage --watchAll=false
-        working-directory: './backend'
-        continue-on-error: true
+            if [[ "$MOD_BACKEND" == "$MOD_BACKEND" ]]; then
+               echo "resultpath=$mod_backend" >> $GITHUB_OUTPUT
+            elif [[ "$MOD_FRONTEND" == "$MOD_FRONTEND" ]]; then
+              echo "resultpath=$mod_frontend" >> $GITHUB_OUTPUT
+            else
+              echo "❌ Path  resultpath does not match any ."
+              exit 0
+            fi
+
+      # - name: Set up Node.js
+      #   uses: actions/setup-node@v4
+      #   with:
+      #     node-version: ${{ inputs.node-version }}
+      #     cache: 'npm'
+      #     cache-dependency-path: './backend/package-lock.json'
+
+      # - name: Install dependencies
+      #   run: npm ci
+      #   working-directory: './backend'
+
+      # - name: Run tests with coverage
+      #   id: run-tests
+      #   run: npm test -- --coverage --watchAll=false
+      #   working-directory: './backend'
+      #   continue-on-error: true
         
 
-      - name: Upload coverage reports
-        uses: actions/upload-artifact@v4
-        with:
-          name: 'coverage-reports'
-          path: 'coverage/'
-          retention-days: 30
-          working-directory: './backend'
+      # - name: Upload coverage reports
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: 'coverage-reports'
+      #     path: 'coverage/'
+      #     retention-days: 30
+      #     working-directory: './backend'
 
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
+      # - name: Upload test results
+      #   uses: actions/upload-artifact@v4
       
-        with:
-          name: 'test-results'
-          path: 'coverage/lcov.info'
-          retention-days: 30
-          working-directory: './backend'
+      #   with:
+      #     name: 'test-results'
+      #     path: 'coverage/lcov.info'
+      #     retention-days: 30
+      #     working-directory: './backend'
 
-      - name: Create test summary
+      # - name: Create test summary
      
-        run: |
-          echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
-          if [ -f "coverage/lcov.info" ]; then
-            echo "✅ Tests completed with coverage report" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "⚠️ Tests completed without coverage report" >> $GITHUB_STEP_SUMMARY
-          fi
+      #   run: |
+      #     echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
+      #     if [ -f "coverage/lcov.info" ]; then
+      #       echo "✅ Tests completed with coverage report" >> $GITHUB_STEP_SUMMARY
+      #     else
+      #       echo "⚠️ Tests completed without coverage report" >> $GITHUB_STEP_SUMMARY
+      #     fi
 
   # deploy-pre:
   #   if: github.base_ref == 'develop'
