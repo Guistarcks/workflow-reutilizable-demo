@@ -33,8 +33,7 @@ on:
         default: './config.json'  
 
 jobs:
- 
- read-config-json:
+  read-config-json:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.set-vars.outputs.version }}
