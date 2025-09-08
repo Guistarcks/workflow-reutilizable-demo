@@ -98,17 +98,15 @@ jobs:
 
       - name: comprobar modulo
         run: |
-         run: |
-            MOD_BACKEND="${{ needs.read-config-json.outputs.mod_backend }}"
-            MOD_FRONTEND="${{ needs.read-config-json.outputs.mod_frontend }}"
-          
+          MOD_BACKEND="$mod_backend"
+          MOD_FRONTEND="$mod_frontend"
 
             if [[ "$MOD_BACKEND" == "$MOD_BACKEND" ]]; then
                echo "resultpath=$mod_backend" >> $GITHUB_OUTPUT
             elif [[ "$MOD_FRONTEND" == "$MOD_FRONTEND" ]]; then
               echo "resultpath=$mod_frontend" >> $GITHUB_OUTPUT
             else
-              echo "❌ Path  resultpath does not match any ."
+              echo "❌ Path  $resultpath does not match any ."
               exit 0
             fi
 
