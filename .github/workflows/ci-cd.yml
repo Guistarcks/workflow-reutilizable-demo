@@ -3,34 +3,34 @@ on:
   workflow_call:
     inputs:
       node-version:
-        description: 'Node.js version to use'
+        description: "Node.js version to use"
         required: true
         type: string
       sonar-scanner:
-        description: 'SonarQube scan mode'
+        description: "SonarQube scan mode"
         required: true
         type: string
-        default: ''
+        default: ""
       deploy-entorno:
-        description: 'Default entorno for deployment'
+        description: "Default entorno for deployment"
         required: true
         type: string
-        default: ''
+        default: ""
       base-branches:
-        description: 'Base branch name for PRs'
+        description: "Base branch name for PRs"
         required: true
         type: string
-        default: ''
+        default: ""
       pr-merged:
-        description: 'Indicates if the PR was merged'
+        description: "Indicates if the PR was merged"
         required: true
         type: boolean
         default: false
       path-config-json:
-        description: 'Path to the config.json file'
+        description: "Path to the config.json file"
         required: false
         type: string
-        default: './config.json'  
+        default: "./config.json"
 
 jobs:
   read-config-json:
@@ -80,6 +80,7 @@ jobs:
           echo "✅ Configuration loaded successfully"
 
   test-unitarios:
+    needs: [read-config-json]
     if: |
       always() && (
         startsWith(github.ref, 'refs/heads/feature/') ||
@@ -91,24 +92,29 @@ jobs:
           )
         )
     runs-on: ubuntu-latest
-   
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: comprobar modulo
         run: |
-          MOD_BACKEND="$mod_backend"
-          MOD_FRONTEND="$mod_frontend"
+          MOD_BACKEND="${{ needs.read-config-json.outputs.modulo-backend }}"
+          MOD_FRONTEND="${{ needs.read-config-json.outputs.modulo-frontend }}"
 
-            if [[ "$MOD_BACKEND" == "$MOD_BACKEND" ]]; then
-               echo "resultpath=$mod_backend" >> $GITHUB_OUTPUT
-            elif [[ "$MOD_FRONTEND" == "$MOD_FRONTEND" ]]; then
-              echo "resultpath=$mod_frontend" >> $GITHUB_OUTPUT
-            else
-              echo "❌ Path  $resultpath does not match any ."
-              exit 0
-            fi
+          echo "🔍 Debugging variables:"
+          echo "MOD_BACKEND: '$MOD_BACKEND'"
+          echo "MOD_FRONTEND: '$MOD_FRONTEND'"
+
+          if [[ -n "$MOD_BACKEND" && "$MOD_BACKEND" != "null" ]]; then
+            echo "✅ Backend module found: $MOD_BACKEND"
+            echo "moduleresult=$MOD_BACKEND" >> $GITHUB_OUTPUT
+          elif [[ -n "$MOD_FRONTEND" && "$MOD_FRONTEND" != "null" ]]; then
+            echo "✅ Frontend module found: $MOD_FRONTEND"
+            echo "moduleresult=$MOD_FRONTEND" >> $GITHUB_OUTPUT
+          else
+            echo "❌ No valid module found. Backend: '$MOD_BACKEND', Frontend: '$MOD_FRONTEND'"
+            exit 0
+          fi
 
       # - name: Set up Node.js
       #   uses: actions/setup-node@v4
@@ -126,7 +132,6 @@ jobs:
       #   run: npm test -- --coverage --watchAll=false
       #   working-directory: './backend'
       #   continue-on-error: true
-        
 
       # - name: Upload coverage reports
       #   uses: actions/upload-artifact@v4
@@ -138,7 +143,7 @@ jobs:
 
       # - name: Upload test results
       #   uses: actions/upload-artifact@v4
-      
+
       #   with:
       #     name: 'test-results'
       #     path: 'coverage/lcov.info'
@@ -146,7 +151,7 @@ jobs:
       #     working-directory: './backend'
 
       # - name: Create test summary
-     
+
       #   run: |
       #     echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
       #     if [ -f "coverage/lcov.info" ]; then
@@ -172,4 +177,3 @@ jobs:
   #     environment: 'pre-production'
   #     artifact-name: 'node-app-artifacts'
   #     deploy-path: './dist'
-  
