@@ -43,17 +43,15 @@ jobs:
       modulo-backend: ${{ steps.set-vars.outputs.mod_backend }}
       modulo-frontend: ${{ steps.set-vars.outputs.mod_frontend  }}
 
-
-
     steps:
       - name: Obtener código fuente 📥
         uses: actions/checkout@v4
 
-     - name: Read configuration JSON and export variables 📄
+      - name: Read configuration JSON and export variables 📄
         id: set-vars
         shell: bash
         run: |
-          CONFIG_PATH="${{ inputs.config-path }}"
+          CONFIG_PATH="${{ inputs.path-config-json }}"
           if [ ! -f "$CONFIG_PATH" ]; then 
             echo "❌ Config file not found: $CONFIG_PATH"
             exit 1
