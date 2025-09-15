@@ -94,13 +94,13 @@ jobs:
 
 
   print-inputs:
-  needs: read-config-json
-  runs-on: ubuntu-latest
-  steps:
-    - name: Print workflow_call inputs
-      run: |
-        echo "base-branches: $base-branches"
-        echo "pr-merged: $pr-merged"
+    needs: read-config-json
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print workflow_call inputs
+        run: |
+          echo "base-branches: $base-branches"
+          echo "pr-merged: $pr-merged"
 
 
   test-unitarios:
