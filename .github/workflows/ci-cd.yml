@@ -32,19 +32,19 @@ on:
         type: string
         default: "./config.json"
 
-print-inputs:
+
+
+jobs:
+
+  print-inputs:
   runs-on: ubuntu-latest
   steps:
     - name: Print workflow_call inputs
       run: |
-        echo "path-config-json: ${{ inputs.path-config-json }}"
-        echo "node-version: ${{ inputs.node-version }}"
-        echo "sonar-scanner: ${{ inputs.sonar-scanner }}"
-        echo "deploy-entorno: ${{ inputs.deploy-entorno }}"
         echo "base-branches: ${{ inputs.base-branches }}"
         echo "pr-merged: ${{ inputs.pr-merged }}"
 
-jobs:
+      
   read-config-json:
     runs-on: ubuntu-latest
     outputs:
