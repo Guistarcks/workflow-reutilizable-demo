@@ -95,6 +95,7 @@ jobs:
         run: |
           echo "base-branches: ${{inputs.base-branches}}"
           echo "pr-merged: ${{inputs.pr-merged}}"
+          echo "sonar-scanner: $sonar_scanner"
 
 
   test-unitarios:
@@ -163,9 +164,7 @@ jobs:
 
   sonar-scan:
     needs: [test-unitarios, read-config-json]
-    if: always() && startsWith(github.ref, 'refs/heads/release/') 
-        || (always() && inputs.pr-merged == true && inputs.base-branches == 'develop' && needs.read-config-json.sonar_scanner != 'skip')
-        || (always() && inputs.pr-merged == true && inputs.base-branches == 'main')
+    if: (always() && inputs.pr-merged == true && inputs.base-branches == 'develop' && needs.read-config-json.sonar_scanner != 'skip')
 
     runs-on: ubuntu-latest
     steps:
