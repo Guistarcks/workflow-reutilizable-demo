@@ -167,7 +167,7 @@ jobs:
     if: |
         always() &&
         inputs.pr-merged == true && inputs.base-branches == 'develop' &&
-        needs.read-config-json.sonar_scanner !='skip')
+        needs.read-config-json.sonar_scanner !='skip'
 
     runs-on: ubuntu-latest
     steps:
