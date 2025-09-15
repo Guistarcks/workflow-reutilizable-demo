@@ -85,12 +85,10 @@ jobs:
       always() && (
         startsWith(github.ref, 'refs/heads/feature/') ||
         (inputs.pr-merged == true &&
-        inputs.base-branches == 'develop' &&
-        inputs.sonar_scanner != 'skip') ||
-        
+        inputs.base-branches == 'develop') ||
         (inputs.pr-merged == true &&
-         inputs.base-branches == 'main' &&
-         inputs.sonar_scanner != 'skip'))
+         inputs.base-branches == 'main')
+
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -162,8 +160,7 @@ jobs:
         inputs.sonar_scanner != 'skip') ||
         
         (inputs.pr-merged == true &&
-         inputs.base-branches == 'main' &&
-         inputs.sonar_scanner != 'skip'))
+         inputs.base-branches == 'main')
     
     runs-on: ubuntu-latest
     steps:
@@ -229,6 +226,7 @@ jobs:
       always() && 
         (inputs.pr-merged == true &&
         inputs.base-branches == 'main' )
+        
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
