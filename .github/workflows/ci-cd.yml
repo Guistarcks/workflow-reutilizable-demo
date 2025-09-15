@@ -176,6 +176,8 @@ jobs:
         run: |
           echo "SonarQube analysis would run here."
           echo "Sonar Scanner mode: ${{ needs.read-config-json.outputs.sonar_scanner }}"
+          echo "Base branch: ${{ inputs.base-branches }}"
+          echo "PR merged: ${{ inputs.pr-merged }}" 
 
   build:
     needs: [test-unitarios, read-config-json, sonar-scan]
