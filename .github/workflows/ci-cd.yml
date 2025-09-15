@@ -40,15 +40,7 @@ env:
   
 jobs:
 
-  print-inputs:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Print workflow_call inputs
-        run: |
-          echo "base-branches: $base-branches"
-          echo "pr-merged: $pr-merged"
-
-      
+       
   read-config-json:
     runs-on: ubuntu-latest
     outputs:
@@ -99,6 +91,17 @@ jobs:
           echo "**Módulo Backend:** $mod_backend" >> $GITHUB_STEP_SUMMARY
           echo "**Módulo Frontend:** $mod_frontend" >> $GITHUB_STEP_SUMMARY
           echo "✅ Configuration loaded successfully"
+
+
+  print-inputs:
+  needs: read-config-json
+  runs-on: ubuntu-latest
+  steps:
+    - name: Print workflow_call inputs
+      run: |
+        echo "base-branches: $base-branches"
+        echo "pr-merged: $pr-merged"
+
 
   test-unitarios:
     needs: [read-config-json]
