@@ -147,7 +147,7 @@ jobs:
   sonar-scan:
     needs: [test-unitarios, read-config-json]
     if: always() && startsWith(github.ref, 'refs/heads/release/') || (always() && inputs.pr-merged == true && inputs.base-branches == 'develop' && needs.read-config-json.sonar_scanner != 'skip') || (always() && inputs.pr-merged == true && inputs.base-branches == 'main')
-    
+
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -157,8 +157,11 @@ jobs:
         run: echo "SonarQube analysis would run here."    
   
   build:
-    needs: [test-unitarios, sonar-scan]
-    if: always() && startsWith(github.ref, 'refs/heads/release/') || (always() && inputs.pr-merged == true && inputs.base-branches == 'develop') || (always() && inputs.pr-merged == true && inputs.base-branches == 'main')
+      needs: [test-unitarios, read-config-json, sonar-scan]
+      if: (always() && inputs.pr-merged == true && inputs.base-branches == 'develop' && needs.read-config-json.sonar_scanner == 'skip')
+        || (always() && startsWith(github.ref, 'refs/heads/release/') && needs.sonar-scan.result == 'success')
+        || (always() && inputs.pr-merged == true && inputs.base-branches == 'develop' && needs.read-config-json.sonar_scanner != 'skip' && needs.sonar-scan.result == 'success')
+        || (always() && inputs.pr-merged == true && inputs.base-branches == 'main' && needs.sonar-scan.result == 'success')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
