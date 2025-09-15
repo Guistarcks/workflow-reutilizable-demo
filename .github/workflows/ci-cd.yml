@@ -10,7 +10,7 @@ on:
         description: "SonarQube scan mode"
         required: true
         type: string
-        default: ""
+        default: "off"
       deploy-entorno:
         description: "Default entorno for deployment"
         required: true
@@ -95,7 +95,7 @@ jobs:
         run: |
           echo "base-branches: ${{inputs.base-branches}}"
           echo "pr-merged: ${{inputs.pr-merged}}"
-          echo "sonar-scanner: $sonar_scanner"
+          echo "sonar-scanner: ${{ needs.read-config-json.outputs.sonar_scanner }}"
 
 
   test-unitarios:
@@ -167,7 +167,7 @@ jobs:
     if: |
         always() &&
         inputs.pr-merged == true && inputs.base-branches == 'develop' &&
-        needs.read-config-json.sonar_scanner !='skip'
+        needs.read-config-json.sonar_scanner !='off'
 
     runs-on: ubuntu-latest
     steps:
