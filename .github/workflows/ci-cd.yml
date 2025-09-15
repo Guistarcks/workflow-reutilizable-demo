@@ -186,8 +186,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-        - name: Build artifacts
-          run: echo "Aquí iría el build de los artefactos"
+      - name : Build artifacts
+        run: echo "Aquí iría el build de los artefactos"
 
   deploy-develop:
       needs: build
@@ -226,7 +226,7 @@ jobs:
       always() && 
         (inputs.pr-merged == true &&
         inputs.base-branches == 'main' )
-        
+
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
