@@ -145,8 +145,8 @@ jobs:
     
 
   sonar-scan:
-    needs: [test-unitarios]
-    if: always() && startsWith(github.ref, 'refs/heads/release/') || (always() && inputs.pr-merged == true && inputs.base-branches == 'develop' && inputs.sonar_scanner != 'skip') || (always() && inputs.pr-merged == true && inputs.base-branches == 'main')
+    needs: [test-unitarios, read-config-json]
+    if: always() && startsWith(github.ref, 'refs/heads/release/') || (always() && inputs.pr-merged == true && inputs.base-branches == 'develop' && needs.read-config-json.sonar_scanner != 'skip') || (always() && inputs.pr-merged == true && inputs.base-branches == 'main')
     
     runs-on: ubuntu-latest
     steps:
