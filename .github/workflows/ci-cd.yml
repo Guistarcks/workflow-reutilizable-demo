@@ -173,7 +173,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-          uses: actions/checkout@v4
+        uses: actions/checkout@v4
 
       - name: Deploy to Development
         run: echo "Aquí iría el despliegue a desarrollo"
