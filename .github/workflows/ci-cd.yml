@@ -31,6 +31,13 @@ on:
         required: false
         type: string
         default: "./config.json"
+env:
+  path-config-json: ${{ inputs.path-config-json }}
+  node-version: ${{ inputs.node-version }}
+  sonar-scanner: ${{ inputs.sonar-scanner }}
+  deploy-entorno: ${{ inputs.deploy-entorno }}
+  base-branches: ${{ inputs.base-branches }}
+  pr-merged: ${{ inputs.pr-merged }}
 
 jobs:
   read-config-json:
@@ -41,6 +48,7 @@ jobs:
       entorno: ${{ steps.set-vars.outputs.entorno }}
       modulo-backend: ${{ steps.set-vars.outputs.mod_backend }}
       modulo-frontend: ${{ steps.set-vars.outputs.mod_frontend  }}
+     
 
     steps:
       - name: Obtener código fuente 📥
@@ -72,6 +80,9 @@ jobs:
           echo "mod_frontend=$mod_frontend" >> $GITHUB_OUTPUT
 
           echo "🔍 sonar_scanner value: $sonar_scanner"
+          echo "🔍 entorno value: $entorno"
+          echo "🔍 base-branches value: $base-branches"
+          echo "🔍 pr-merged value: $pr-merged"
 
           echo "## 📋 Configuration Summary" >> $GITHUB_STEP_SUMMARY
           echo "**Version:** $version" >> $GITHUB_STEP_SUMMARY
