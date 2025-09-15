@@ -167,7 +167,7 @@ jobs:
     if: |
         always() &&
         inputs.pr-merged == true && inputs.base-branches == 'develop' &&
-        needs.read-config-json.sonar_scanner !='off'
+        needs.read-config-json.outputs.sonar_scanner !='off'
 
     runs-on: ubuntu-latest
     steps:
@@ -184,10 +184,10 @@ jobs:
   build:
     needs: [test-unitarios, read-config-json, sonar-scan]
     if:
-      (always() && inputs.pr-merged == true && inputs.base-branches == 'develop' && needs.read-config-json.sonar_scanner == 'skip')
-      || (always() && startsWith(github.ref, 'refs/heads/release/') && needs.sonar-scan.result == 'success')
-      || (always() && inputs.pr-merged == true && inputs.base-branches == 'develop' && needs.read-config-json.sonar_scanner != 'skip' && needs.sonar-scan.result == 'success')
-      || (always() && inputs.pr-merged == true && inputs.base-branches == 'main' && needs.sonar-scan.result == 'success')
+      always() && inputs.pr-merged == true && inputs.base-branches == 'develop' && needs.read-config-json.outputs.sonar_scanner == 'off')
+      || always() && startsWith(github.ref, 'refs/heads/release/')
+      || always() && inputs.pr-merged == true && inputs.base-branches == 'develop' && needs.read-config-json.outputs.sonar_scanner != 'off' && success() )
+      || always() && inputs.pr-merged == true && inputs.base-branches == 'main' && needs.read-config-json.outputs.sonar_scanner != 'off' && success())
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
