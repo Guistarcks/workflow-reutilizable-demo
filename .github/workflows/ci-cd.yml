@@ -81,13 +81,7 @@ jobs:
 
   test-unitarios:
     needs: [read-config-json]
-    if: |
-      always() && (
-        startsWith(github.ref, 'refs/heads/feature/') ||
-        (inputs.pr-merged == true &&
-        inputs.base-branches == 'develop') ||
-        (inputs.pr-merged == true &&
-         inputs.base-branches == 'main')
+    if: always() && startsWith(github.ref, 'refs/heads/feature/') || (always() && inputs.pr-merged == true && inputs.base-branches == 'develop') || (always() && inputs.pr-merged == true && inputs.base-branches == 'main')
 
     runs-on: ubuntu-latest
     steps:
@@ -152,15 +146,7 @@ jobs:
 
   sonar-scan:
     needs: [test-unitarios]
-    if: |
-        always() && (
-        startsWith(github.ref, 'refs/heads/release/') ||
-        (inputs.pr-merged == true &&
-        inputs.base-branches == 'develop' &&
-        inputs.sonar_scanner != 'skip') ||
-        
-        (inputs.pr-merged == true &&
-         inputs.base-branches == 'main')
+      if: always() && startsWith(github.ref, 'refs/heads/release/') || (always() && inputs.pr-merged == true && inputs.base-branches == 'develop' && inputs.sonar_scanner != 'skip') || (always() && inputs.pr-merged == true && inputs.base-branches == 'main')
     
     runs-on: ubuntu-latest
     steps:
@@ -172,15 +158,7 @@ jobs:
   
   build:
     needs: [test-unitarios, sonar-scan]
-    if: |
-       always() && (
-        startsWith(github.ref, 'refs/heads/release/') ||
-        (inputs.pr-merged == true &&
-        inputs.base-branches == 'develop' ) ||
-        
-        (inputs.pr-merged == true &&
-         inputs.base-branches == 'main'))
-   
+    if: always() && startsWith(github.ref, 'refs/heads/release/') || (always() && inputs.pr-merged == true && inputs.base-branches == 'develop') || (always() && inputs.pr-merged == true && inputs.base-branches == 'main')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -190,15 +168,11 @@ jobs:
         run: echo "Aquí iría el build de los artefactos"
 
   deploy-develop:
-      needs: build
-      if: |
-        always() && 
-        (inputs.pr-merged == true &&
-        inputs.base-branches == 'develop' )
-   
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout repository
+    needs: build
+    if: always() && inputs.pr-merged == true && inputs.base-branches == 'develop'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
           uses: actions/checkout@v4
 
         - name: Deploy to Development
@@ -207,11 +181,7 @@ jobs:
 
   deploy-pre-produccion:
     needs: build
-    if: |
-      always() &&
-      startsWith(github.ref, 'refs/heads/release/')
-      
-    
+    if: always() && startsWith(github.ref, 'refs/heads/release/')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
