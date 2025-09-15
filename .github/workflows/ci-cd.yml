@@ -31,12 +31,6 @@ on:
         required: false
         type: string
         default: "./config.json"
-env:
-  node-version: ${{ inputs.node-version }}
-  sonar-scanner: ${{ inputs.sonar-scanner }}
-  deploy-entorno: ${{ inputs.deploy-entorno }}
-  base-branches: ${{ inputs.base-branches }}
-  pr-merged: ${{ inputs.pr-merged }}
   
 jobs:
 
@@ -99,8 +93,8 @@ jobs:
     steps:
       - name: Print workflow_call inputs
         run: |
-          echo "base-branches: $base-branches"
-          echo "pr-merged: $pr-merged"
+          echo "base-branches: ${{inputs.base-branches}}"
+          echo "pr-merged: ${{inputs.pr-merged}}"
 
 
   test-unitarios:
