@@ -146,7 +146,7 @@ jobs:
 
   sonar-scan:
     needs: [test-unitarios]
-      if: always() && startsWith(github.ref, 'refs/heads/release/') || (always() && inputs.pr-merged == true && inputs.base-branches == 'develop' && inputs.sonar_scanner != 'skip') || (always() && inputs.pr-merged == true && inputs.base-branches == 'main')
+    if: always() && startsWith(github.ref, 'refs/heads/release/') || (always() && inputs.pr-merged == true && inputs.base-branches == 'develop' && inputs.sonar_scanner != 'skip') || (always() && inputs.pr-merged == true && inputs.base-branches == 'main')
     
     runs-on: ubuntu-latest
     steps:
@@ -175,8 +175,8 @@ jobs:
       - name: Checkout repository
           uses: actions/checkout@v4
 
-        - name: Deploy to Development
-          run: echo "Aquí iría el despliegue a desarrollo"
+      - name: Deploy to Development
+        run: echo "Aquí iría el despliegue a desarrollo"
 
 
   deploy-pre-produccion:
@@ -192,11 +192,7 @@ jobs:
 
   deploy-produccion:
     needs: build
-    if: |
-      always() && 
-        (inputs.pr-merged == true &&
-        inputs.base-branches == 'main' )
-
+    if: always() && (inputs.pr-merged == true && inputs.base-branches == 'main')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
