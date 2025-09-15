@@ -31,13 +31,18 @@ on:
         required: false
         type: string
         default: "./config.json"
-env:
-  path-config-json: ${{ inputs.path-config-json }}
-  node-version: ${{ inputs.node-version }}
-  sonar-scanner: ${{ inputs.sonar-scanner }}
-  deploy-entorno: ${{ inputs.deploy-entorno }}
-  base-branches: ${{ inputs.base-branches }}
-  pr-merged: ${{ inputs.pr-merged }}
+
+print-inputs:
+  runs-on: ubuntu-latest
+  steps:
+    - name: Print workflow_call inputs
+      run: |
+        echo "path-config-json: ${{ inputs.path-config-json }}"
+        echo "node-version: ${{ inputs.node-version }}"
+        echo "sonar-scanner: ${{ inputs.sonar-scanner }}"
+        echo "deploy-entorno: ${{ inputs.deploy-entorno }}"
+        echo "base-branches: ${{ inputs.base-branches }}"
+        echo "pr-merged: ${{ inputs.pr-merged }}"
 
 jobs:
   read-config-json:
@@ -48,7 +53,6 @@ jobs:
       entorno: ${{ steps.set-vars.outputs.entorno }}
       modulo-backend: ${{ steps.set-vars.outputs.mod_backend }}
       modulo-frontend: ${{ steps.set-vars.outputs.mod_frontend  }}
-     
 
     steps:
       - name: Obtener código fuente 📥
@@ -131,31 +135,31 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-        working-directory: './${{ steps.check-module.outputs.moduleresult }}'
+        working-directory: "./${{ steps.check-module.outputs.moduleresult }}"
 
       - name: Run tests with coverage
         id: run-tests
         run: npm test -- --coverage --watchAll=false
-        working-directory: './${{ steps.check-module.outputs.moduleresult }}'
+        working-directory: "./${{ steps.check-module.outputs.moduleresult }}"
         continue-on-error: true
 
       - name: Upload coverage reports
         uses: actions/upload-artifact@v4
         with:
-          name: 'coverage-reports'
-          path: 'coverage/'
+          name: "coverage-reports"
+          path: "coverage/"
           retention-days: 30
-          working-directory: './${{ steps.check-module.outputs.moduleresult }}'
+          working-directory: "./${{ steps.check-module.outputs.moduleresult }}"
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
 
         with:
-          name: 'test-results'
-          path: 'coverage/lcov.info'
+          name: "test-results"
+          path: "coverage/lcov.info"
           retention-days: 30
-          working-directory: './${{ steps.check-module.outputs.moduleresult }}'
-    
+          working-directory: "./${{ steps.check-module.outputs.moduleresult }}"
+
   sonar-scan:
     needs: [test-unitarios, read-config-json]
     if: always() && startsWith(github.ref, 'refs/heads/release/') || (always() && inputs.pr-merged == true && inputs.base-branches == 'develop' && needs.read-config-json.sonar_scanner != 'skip') || (always() && inputs.pr-merged == true && inputs.base-branches == 'main')
@@ -166,11 +170,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Sonar Qube Scan
-        run: echo "SonarQube analysis would run here."    
-  
+        run: echo "SonarQube analysis would run here."
+
   build:
     needs: [test-unitarios, read-config-json, sonar-scan]
-    if: (always() && inputs.pr-merged == true && inputs.base-branches == 'develop' && needs.read-config-json.sonar_scanner == 'skip')
+    if:
+      (always() && inputs.pr-merged == true && inputs.base-branches == 'develop' && needs.read-config-json.sonar_scanner == 'skip')
       || (always() && startsWith(github.ref, 'refs/heads/release/') && needs.sonar-scan.result == 'success')
       || (always() && inputs.pr-merged == true && inputs.base-branches == 'develop' && needs.read-config-json.sonar_scanner != 'skip' && needs.sonar-scan.result == 'success')
       || (always() && inputs.pr-merged == true && inputs.base-branches == 'main' && needs.sonar-scan.result == 'success')
@@ -179,7 +184,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name : Build artifacts
+      - name: Build artifacts
         run: echo "Aquí iría el build de los artefactos"
 
   deploy-develop:
@@ -193,14 +198,13 @@ jobs:
       - name: Deploy to Development
         run: echo "Aquí iría el despliegue a desarrollo"
 
-
   deploy-pre-produccion:
     needs: build
     if: always() && startsWith(github.ref, 'refs/heads/release/')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4   
+        uses: actions/checkout@v4
 
       - name: Deploy to Pre-Production
         run: echo "Aquí iría el despliegue a pre-producción"
@@ -219,5 +223,3 @@ jobs:
       # 1. Taggear versión
       # 2. Desplegar artefacto versionado
       # 3. Ejecutar smoke tests y monitoreo post-deploy  # ...steps para despliegue a pre-producción...
-
-
