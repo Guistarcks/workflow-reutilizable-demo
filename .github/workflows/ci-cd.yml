@@ -31,9 +31,14 @@ on:
         required: false
         type: string
         default: "./config.json"
-
-
-
+env:
+  path-config-json: ${{ inputs.path-config-json }}
+  node-version: ${{ inputs.node-version }}
+  sonar-scanner: ${{ inputs.sonar-scanner }}
+  deploy-entorno: ${{ inputs.deploy-entorno }}
+  base-branches: ${{ inputs.base-branches }}
+  pr-merged: ${{ inputs.pr-merged }}
+  
 jobs:
 
   print-inputs:
@@ -41,8 +46,8 @@ jobs:
   steps:
     - name: Print workflow_call inputs
       run: |
-        echo "base-branches: ${{ inputs.base-branches }}"
-        echo "pr-merged: ${{ inputs.pr-merged }}"
+        echo "base-branches: ${env.base-branches}"
+        echo "pr-merged: ${env.pr-merged}"
 
       
   read-config-json:
