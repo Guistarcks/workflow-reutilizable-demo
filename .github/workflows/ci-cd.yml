@@ -84,13 +84,13 @@ jobs:
     if: |
       always() && (
         startsWith(github.ref, 'refs/heads/feature/') ||
-        startsWith(github.ref, 'refs/heads/develop') ||
-        (
-          inputs.pr-merged == true &&
-            inputs.base-branches == 'develop' &&
-            github.event_name == 'workflow_dispatch'
-          )
-        )
+        (inputs.pr-merged == true &&
+        inputs.base-branches == 'develop' &&
+        inputs.sonar_scanner != 'skip') ||
+        
+        (inputs.pr-merged == true &&
+         inputs.base-branches == 'main' &&
+         inputs.sonar_scanner != 'skip'))
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -150,31 +150,95 @@ jobs:
           path: 'coverage/lcov.info'
           retention-days: 30
           working-directory: './${{ steps.check-module.outputs.moduleresult }}'
+    
 
-      # - name: Create test summary
+  sonar-scan:
+    needs: [test-unitarios]
+    if: |
+        always() && (
+        startsWith(github.ref, 'refs/heads/release/') ||
+        (inputs.pr-merged == true &&
+        inputs.base-branches == 'develop' &&
+        inputs.sonar_scanner != 'skip') ||
+        
+        (inputs.pr-merged == true &&
+         inputs.base-branches == 'main' &&
+         inputs.sonar_scanner != 'skip'))
+    
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      #   run: |
-      #     echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
-      #     if [ -f "coverage/lcov.info" ]; then
-      #       echo "✅ Tests completed with coverage report" >> $GITHUB_STEP_SUMMARY
-      #     else
-      #       echo "⚠️ Tests completed without coverage report" >> $GITHUB_STEP_SUMMARY
-      #     fi
+      - name: Sonar Qube Scan
+        run: echo "SonarQube analysis would run here."    
+  
+  build:
+    needs: [test-unitarios, sonar-scan]
+    if: |
+       always() && (
+        startsWith(github.ref, 'refs/heads/release/') ||
+        (inputs.pr-merged == true &&
+        inputs.base-branches == 'develop' ) ||
+        
+        (inputs.pr-merged == true &&
+         inputs.base-branches == 'main'))
+   
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-  # deploy-pre:
-  #   if: github.base_ref == 'develop'
-  #   needs: build
-  #   uses: ./.github/workflows/action-deploy-pre.yml
-  #   with:
-  #     environment: 'pre-production'
-  #     artifact-name: 'node-app-artifacts'
-  #     deploy-path: './dist'
+        - name: Build artifacts
+          run: echo "Aquí iría el build de los artefactos"
 
-  # deploy-pro:
-  #   if: github.base_ref == 'main'
-  #   needs: build
-  #   uses: ./.github/workflows/action-deploy-pro.yml
-  #   with:
-  #     environment: 'pre-production'
-  #     artifact-name: 'node-app-artifacts'
-  #     deploy-path: './dist'
+  deploy-develop:
+      needs: build
+      if: |
+        always() && 
+        (inputs.pr-merged == true &&
+        inputs.base-branches == 'develop' )
+   
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+
+        - name: Deploy to Development
+          run: echo "Aquí iría el despliegue a desarrollo"
+
+
+  deploy-pre-produccion:
+    needs: build
+    if: |
+      always() &&
+      startsWith(github.ref, 'refs/heads/release/')
+      
+    
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4   
+
+      - name: Deploy to Pre-Production
+          run: echo "Aquí iría el despliegue a pre-producción"
+
+  deploy-produccion:
+    needs: build
+    if: |
+      always() && 
+        (inputs.pr-merged == true &&
+        inputs.base-branches == 'main' )
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to Production
+        run: echo "Aquí iría el despliegue a producción"
+      # ...steps para despliegue a producción...
+      # 1. Taggear versión
+      # 2. Desplegar artefacto versionado
+      # 3. Ejecutar smoke tests y monitoreo post-deploy  # ...steps para despliegue a pre-producción...
+
+
