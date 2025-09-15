@@ -42,12 +42,12 @@ env:
 jobs:
 
   print-inputs:
-  runs-on: ubuntu-latest
-  steps:
-    - name: Print workflow_call inputs
-      run: |
-        echo "base-branches: ${env.base-branches}"
-        echo "pr-merged: ${env.pr-merged}"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print workflow_call inputs
+        run: |
+          echo "base-branches: ${env.base-branches}"
+          echo "pr-merged: ${env.pr-merged}"
 
       
   read-config-json:
