@@ -218,7 +218,7 @@ jobs:
         uses: actions/checkout@v4   
 
       - name: Deploy to Pre-Production
-          run: echo "Aquí iría el despliegue a pre-producción"
+        run: echo "Aquí iría el despliegue a pre-producción"
 
   deploy-produccion:
     needs: build
