@@ -71,6 +71,8 @@ jobs:
           echo "mod_backend=$mod_backend" >> $GITHUB_OUTPUT
           echo "mod_frontend=$mod_frontend" >> $GITHUB_OUTPUT
 
+          echo "🔍 sonar_scanner value: $sonar_scanner"
+
           echo "## 📋 Configuration Summary" >> $GITHUB_STEP_SUMMARY
           echo "**Version:** $version" >> $GITHUB_STEP_SUMMARY
           echo "**Sonar Scanner:** $sonar_scanner" >> $GITHUB_STEP_SUMMARY
@@ -143,7 +145,6 @@ jobs:
           retention-days: 30
           working-directory: './${{ steps.check-module.outputs.moduleresult }}'
     
-
   sonar-scan:
     needs: [test-unitarios, read-config-json]
     if: always() && startsWith(github.ref, 'refs/heads/release/') || (always() && inputs.pr-merged == true && inputs.base-branches == 'develop' && needs.read-config-json.sonar_scanner != 'skip') || (always() && inputs.pr-merged == true && inputs.base-branches == 'main')
