@@ -34,7 +34,6 @@ on:
   
 jobs:
 
-       
   read-config-json:
     runs-on: ubuntu-latest
     outputs:
@@ -100,7 +99,10 @@ jobs:
 
   test-unitarios:
     needs: [read-config-json]
-    if: always() && startsWith(github.ref, 'refs/heads/feature/') || (always() && inputs.pr-merged == true && inputs.base-branches == 'develop') || (always() && inputs.pr-merged == true && inputs.base-branches == 'main')
+    if: always() && startsWith(github.ref, 'refs/heads/feature/') 
+        || (always() && inputs.pr-merged == true && inputs.base-branches == 'develop')
+        || (always() && inputs.pr-merged == true && inputs.base-branches == 'main')
+
 
     runs-on: ubuntu-latest
     steps:
@@ -166,8 +168,8 @@ jobs:
     needs: [test-unitarios, read-config-json]
     if: |
         always() && startsWith(github.ref, 'refs/heads/release/') 
-        || (always() && inputs.pr-merged == true && inputs.base-branches == 'develop' && needs.read-config-json.outputs.sonar_scanner !='off'
-        || (always() && inputs.pr-merged == true && inputs.base-branches == 'main')
+        || always() && inputs.pr-merged == true && inputs.base-branches == 'develop' && needs.read-config-json.outputs.sonar_scanner !='off'
+        || always() && inputs.pr-merged == true && inputs.base-branches == 'main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
