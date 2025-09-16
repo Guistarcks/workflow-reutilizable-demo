@@ -165,10 +165,9 @@ jobs:
   sonar-scan:
     needs: [test-unitarios, read-config-json]
     if: |
-        always() &&
-        inputs.pr-merged == true && inputs.base-branches == 'develop' &&
-        needs.read-config-json.outputs.sonar_scanner !='off'
-
+        always() && startsWith(github.ref, 'refs/heads/release/') 
+        || (always() && inputs.pr-merged == true && inputs.base-branches == 'develop' && needs.read-config-json.outputs.sonar_scanner !='off'
+        || (always() && inputs.pr-merged == true && inputs.base-branches == 'main')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -227,7 +226,52 @@ jobs:
 
       - name: Deploy to Production
         run: echo "Aquí iría el despliegue a producción"
-      # ...steps para despliegue a producción...
+        # ...steps para despliegue a producción...
       # 1. Taggear versión
       # 2. Desplegar artefacto versionado
-      # 3. Ejecutar smoke tests y monitoreo post-deploy  # ...steps para despliegue a pre-producción...
+      # 3. Ejecutar smoke tests y monitoreo post-deploy  # ...steps para despliegue a pre-producción.
+
+  close-release:
+    needs: deploy-produccion
+    name: Publish new release
+    runs-on: ubuntu-latest
+    if: always() && (inputs.pr-merged == true && inputs.base-branches == 'main') # only merged pull requests must trigger this job
+    steps:
+      - name: Extract version from branch name (for release branches)
+        if: startsWith(github.event.pull_request.head.ref, 'release/')
+        run: |
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          VERSION=${BRANCH_NAME#release/}
+
+          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Extract version from branch name (for hotfix branches)
+        if: startsWith(github.event.pull_request.head.ref, 'hotfix/')
+        run: |
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          VERSION=${BRANCH_NAME#hotfix/}
+
+          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Create Release
+        uses: Guistarcks/create-release@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          target_commitish: ${{ github.event.pull_request.merge_commit_sha }}
+          tag_name: ${{ env.RELEASE_VERSION }}
+          name: ${{ env.RELEASE_VERSION }}
+          draft: false
+          prerelease: false
+
+      - name: Merge main into develop branch
+        uses: Guistarcks/create-pull-request@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          head: main
+          base: develop
+          title: Merge main into develop branch
+          body: |
+            .This PR merges the main branch back into develop.
+            This happens to ensure that the updates that happend on the release branch, i.e. CHANGELOG and manifest updates are also present on the develop branch
