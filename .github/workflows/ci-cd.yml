@@ -100,9 +100,9 @@ jobs:
   test-unitarios:
     needs: [read-config-json]
     if: always() && startsWith(github.ref, 'refs/heads/feature/') 
-        || (always() && inputs.pr-merged == true && inputs.base-branches == 'develop')
-        || (always() && inputs.pr-merged == true && inputs.base-branches == 'main')
-
+        || always() && inputs.pr-merged == true && inputs.base-branches == 'develop'
+        || always() && inputs.pr-merged == true && inputs.base-branches == 'main'
+        || always() && startsWith(github.ref, 'refs/heads/release/')
 
     runs-on: ubuntu-latest
     steps:
